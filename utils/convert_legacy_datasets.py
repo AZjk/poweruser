@@ -13,29 +13,98 @@ META_TEMPLATE = Path(
 MAX_DEPTH = 5
 
 FIELD_MAPPING = {
-    "/measurement/instrument/detector/exposure_period": ("/entry/instrument/detector_1/frame_time", 1.0),
-    "/measurement/instrument/detector/distance": ("/entry/instrument/detector_1/distance", 0.001),
-    "/measurement/instrument/detector/x_pixel_size": ("/entry/instrument/detector_1/x_pixel_size", 0.001),
-    "/measurement/instrument/detector/y_pixel_size": ("/entry/instrument/detector_1/y_pixel_size", 0.001),
-    "/measurement/instrument/detector/beam_center_x": ("/entry/instrument/detector_1/beam_center_x", 1.0),
-    "/measurement/instrument/detector/beam_center_y": ("/entry/instrument/detector_1/beam_center_y", 1.0),
-    "/measurement/sample/QNW_Zone1_Temperature": ("/entry/sample/qnw1_temperature", 1.0),
-    "/measurement/sample/QNW_Zone2_Temperature": ("/entry/sample/qnw2_temperature", 1.0),
-    "/measurement/sample/QNW_Zone3_Temperature": ("/entry/sample/qnw3_temperature", 1.0),
-    "/measurement/sample/QNW_Zone1_Temperature_Set": ("/entry/sample/qnw1_temperature_set", 1.0),
-    "/measurement/sample/QNW_Zone2_Temperature_Set": ("/entry/sample/qnw2_temperature_set", 1.0),
-    "/measurement/sample/QNW_Zone3_Temperature_Set": ("/entry/sample/qnw3_temperature_set", 1.0),
-    "/measurement/instrument/source_begin/energy": ("/entry/instrument/incident_beam/incident_energy", 1.0),
-    "/measurement/instrument/source_begin/current": ("/entry/instrument/incident_beam/ring_current", 1.0),
-    "/measurement/instrument/source_begin/beam_intensity_incident": ("/entry/instrument/incident_beam/incident_beam_intensity", 1.0),
-    "/measurement/instrument/source_begin/beam_intensity_transmitted": ("/entry/instrument/incident_beam/transmitted_beam_intensity", 1.0),
-    "/measurement/instrument/acquisition/stage_x": ("/entry/instrument/detector_1/position_x", 0.001),
-    "/measurement/instrument/acquisition/stage_z": ("/entry/instrument/detector_1/position_y", 0.001),
-    "/measurement/instrument/acquisition/stage_zero_x": ("/entry/instrument/detector_1/beam_center_position_x", 0.001),
-    "/measurement/instrument/acquisition/stage_zero_z": ("/entry/instrument/detector_1/beam_center_position_y", 0.001),
-    "/measurement/instrument/acquisition/compression": ("/entry/instrument/detector_1/compression", 1),
-    "/measurement/instrument/acquisition/parent_folder": ("/entry/instrument/bluesky/parent_folder", None),
-    "/measurement/instrument/acquisition/specfile": ("/entry/instrument/bluesky/spec_file", None),
+    "/measurement/instrument/detector/exposure_period": (
+        "/entry/instrument/detector_1/frame_time",
+        1.0,
+    ),
+    "/measurement/instrument/detector/distance": (
+        "/entry/instrument/detector_1/distance",
+        0.001,
+    ),
+    "/measurement/instrument/detector/x_pixel_size": (
+        "/entry/instrument/detector_1/x_pixel_size",
+        0.001,
+    ),
+    "/measurement/instrument/detector/y_pixel_size": (
+        "/entry/instrument/detector_1/y_pixel_size",
+        0.001,
+    ),
+    "/measurement/instrument/detector/beam_center_x": (
+        "/entry/instrument/detector_1/beam_center_x",
+        1.0,
+    ),
+    "/measurement/instrument/detector/beam_center_y": (
+        "/entry/instrument/detector_1/beam_center_y",
+        1.0,
+    ),
+    "/measurement/sample/QNW_Zone1_Temperature": (
+        "/entry/sample/qnw1_temperature",
+        1.0,
+    ),
+    "/measurement/sample/QNW_Zone2_Temperature": (
+        "/entry/sample/qnw2_temperature",
+        1.0,
+    ),
+    "/measurement/sample/QNW_Zone3_Temperature": (
+        "/entry/sample/qnw3_temperature",
+        1.0,
+    ),
+    "/measurement/sample/QNW_Zone1_Temperature_Set": (
+        "/entry/sample/qnw1_temperature_set",
+        1.0,
+    ),
+    "/measurement/sample/QNW_Zone2_Temperature_Set": (
+        "/entry/sample/qnw2_temperature_set",
+        1.0,
+    ),
+    "/measurement/sample/QNW_Zone3_Temperature_Set": (
+        "/entry/sample/qnw3_temperature_set",
+        1.0,
+    ),
+    "/measurement/instrument/source_begin/energy": (
+        "/entry/instrument/incident_beam/incident_energy",
+        1.0,
+    ),
+    "/measurement/instrument/source_begin/current": (
+        "/entry/instrument/incident_beam/ring_current",
+        1.0,
+    ),
+    "/measurement/instrument/source_begin/beam_intensity_incident": (
+        "/entry/instrument/incident_beam/incident_beam_intensity",
+        1.0,
+    ),
+    "/measurement/instrument/source_begin/beam_intensity_transmitted": (
+        "/entry/instrument/incident_beam/transmitted_beam_intensity",
+        1.0,
+    ),
+    "/measurement/instrument/acquisition/stage_x": (
+        "/entry/instrument/detector_1/position_x",
+        0.001,
+    ),
+    "/measurement/instrument/acquisition/stage_z": (
+        "/entry/instrument/detector_1/position_y",
+        0.001,
+    ),
+    "/measurement/instrument/acquisition/stage_zero_x": (
+        "/entry/instrument/detector_1/beam_center_position_x",
+        0.001,
+    ),
+    "/measurement/instrument/acquisition/stage_zero_z": (
+        "/entry/instrument/detector_1/beam_center_position_y",
+        0.001,
+    ),
+    "/measurement/instrument/acquisition/compression": (
+        "/entry/instrument/detector_1/compression",
+        1,
+    ),
+    "/measurement/instrument/acquisition/parent_folder": (
+        "/entry/instrument/bluesky/parent_folder",
+        None,
+    ),
+    "/measurement/instrument/acquisition/specfile": (
+        "/entry/instrument/bluesky/spec_file",
+        None,
+    ),
     "/measurement/sample/thickness": ("/entry/sample/thickness", 0.001),
 }
 
@@ -104,7 +173,7 @@ def process_subfolder(subfolder_path, source_folder, dest_folder, ftype):
             for old_path, (new_path, scale) in FIELD_MAPPING.items():
                 if old_path in src_hdf:
                     copy_dataset_safe(src_hdf, dst_hdf, old_path, new_path, scale)
-       
+
     except Exception as e:
         print(f"Error processing {subfolder_path}: {e}")
         traceback.print_exc()
@@ -136,7 +205,9 @@ def worker_process_subfolder(args):
     Worker function to process a single subfolder.
     """
     subfolder_path, source_folder, dest_folder, ftype = args
-    process_subfolder(Path(subfolder_path), Path(source_folder), Path(dest_folder), ftype)
+    process_subfolder(
+        Path(subfolder_path), Path(source_folder), Path(dest_folder), ftype
+    )
 
 
 def process_folder(source_folder, dest_folder, max_workers=None, ftype=".bin"):
@@ -152,7 +223,9 @@ def process_folder(source_folder, dest_folder, max_workers=None, ftype=".bin"):
 
     dest_folder.mkdir(parents=True, exist_ok=True)
     all_subfolders = list(walk_subfolders(source_folder, max_depth=MAX_DEPTH))
-    tasks = [(subfolder, source_folder, dest_folder, ftype) for subfolder in all_subfolders]
+    tasks = [
+        (subfolder, source_folder, dest_folder, ftype) for subfolder in all_subfolders
+    ]
 
     if max_workers is None or max_workers == 1:
         for task in tqdm.tqdm(tasks, desc="Processing subfolders"):
@@ -173,7 +246,16 @@ def process_folder(source_folder, dest_folder, max_workers=None, ftype=".bin"):
 if __name__ == "__main__":
     import argparse
 
-    parser = argparse.ArgumentParser(description="Process SAXPCS data folders.")
+    example_text = """\
+    Example:
+    python convert_legacy_datasets.py /path/to/source_folder /path/to/dest_folder --workers 1 --ftype .bin
+    """
+
+    parser = argparse.ArgumentParser(
+        description="Convert legacy XPCS datasets to the new nexus format",
+        epilog=example_text,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument(
         "source_folder", type=str, help="Source folder containing data."
     )
@@ -186,8 +268,14 @@ if __name__ == "__main__":
         default=1,
         help="Number of worker processes. Set to 1 for sequential processing.",
     )
-    parser.add_argument("--ftype", type=str, default=".bin", help="File type to process. options: [.bin, .imm, .h5]")
+    parser.add_argument(
+        "--ftype",
+        type=str,
+        default=".bin",
+        help="File type to process. options: [.bin, .imm, .h5]",
+    )
 
     args = parser.parse_args()
-    process_folder(args.source_folder, args.dest_folder, max_workers=args.workers,
-                   ftype=args.ftype)
+    process_folder(
+        args.source_folder, args.dest_folder, max_workers=args.workers, ftype=args.ftype
+    )
