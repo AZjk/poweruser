@@ -60,26 +60,26 @@ Next, select the appropriate raw data file (not the metadata file ending with ``
 
 Detector Reference Table:
 
-+---------------+--------+----------------------+
-| Detector      | Mode   | Filename Pattern     |
-+===============+========+======================+
-| Eiger4M       | fast   | ``xxxxxx.h5``        |
-| Rigaku3M      | slow   | ``xxxxxx.bin.XYZ``   |
-| Rigaku3M      | fast   | ``xxxxxx.h5``        |
-| Rigaku500k    | fast   | ``xxxxxx.bin``       |
-+---------------+--------+----------------------+
+============  ======  ====================
+Detector      Mode    Filename Pattern
+============  ======  ====================
+Eiger4M       fast    ``xxxxxx.h5``
+Rigaku3M      slow    ``xxxxxx.bin.XYZ``
+Rigaku3M      fast    ``xxxxxx.h5``
+Rigaku500k    fast    ``xxxxxx.bin``
+============  ======  ====================
 
 For Rigaku3M (slow mode), select only ``.bin.000`` — the remaining ``.bin.XYZ`` files will be loaded automatically.
 
 You may control the number of frames to load using the ``num_frames`` setting:
 
-+--------------+--------------------------------------------+
-| num_frames   | Frames Loaded                              |
-+==============+============================================+
-| -1           | ``max(1000, total_frames // 5)`` (default) |
-| 0            | All frames                                 |
-| N > 0        | Frames ``[start_index:start_index+N]``     |
-+--------------+--------------------------------------------+
+============  ==============================================
+num_frames    Frames Loaded
+============  ==============================================
+-1            ``max(1000, total_frames // 5)`` (default)
+0             All frames
+N > 0         ``[start_index : start_index + N]``
+============  ==============================================
 
 Drawing Masks
 =============
