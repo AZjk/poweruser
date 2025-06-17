@@ -29,8 +29,8 @@ You may also obtain the latest single-file package (``.whl``) from your beamline
 
     pip install path_to_pysimplemask.whl
 
-Start Application
-=================
+Start the Application
+=====================
 
 To launch ``pysimplemask``, activate the environment where it was installed and run:
 
@@ -38,6 +38,17 @@ To launch ``pysimplemask``, activate the environment where it was installed and 
 
     pysimplemask
     pysimplemask --path PATH_TO_YOUR_DATA_FOLDER
+
+
+Overview of the GUI Application
+===============================
+
+The GUI application is designed to be user-friendly with a clear layout
+
+.. image:: pysimplemask/figure1.png
+    :align: center
+    :width: 100%
+
 
 Typical Workflow
 ================
@@ -64,8 +75,8 @@ Detector Reference Table:
 Detector      Mode    Filename Pattern
 ============  ======  ====================
 Eiger4M       fast    ``xxxxxx.h5``
-Rigaku3M      slow    ``xxxxxx.bin.XYZ``
-Rigaku3M      fast    ``xxxxxx.h5``
+Rigaku3M      fast    ``xxxxxx.bin.XYZ``
+Rigaku3M      slow    ``xxxxxx.h5``
 Rigaku500k    fast    ``xxxxxx.bin``
 ============  ======  ====================
 
@@ -93,22 +104,40 @@ Once the data is loaded, you can begin defining masks to exclude bad pixels. XPC
 
 Available masking methods include:
 
-1. **Blemish Files**: Load predefined blemish files from ``~/Documents/areaDetectorBlemish/`` (available on APS Linux machines). These are automatically detected by ``pysimplemask``.
+1. **Blemish Files**: Load predefined blemish files from ``~/Documents/areaDetectorBlemish/`` (available on APS Linux machines). These are automatically detected by ``pysimplemask``. You may load the mask defined in your earlier QMap file by select the file and set the HDF path to ``/qmap/mask``. 
 
 2. **Manual Drawing**: Use drawing tools (rectangle, ellipse, polygon) to define custom masks. You can include or exclude regions interactively.
+
+    .. image:: pysimplemask/figure2.png
+       :align: center
+       :width: 100%
+
+    The black arrows indicate the resize/rescale handlers that users can use, while the white arrow indicates the center of the direct beam. ROIs can be moved by pressing the mouse button and dragging the ROI. The exclusive and inclusive ROIs are in solid and dashed lines, respectively.
 
 3. **Binary Thresholding**: Define minimum and maximum intensity values to automatically mask regions outside the defined range.
 
 4. **Manual Editing**: Add specific pixels or regions by inputting coordinates or clicking directly in the GUI. You may also set a radius for intensity-based region growing.
 
 5. **Outlier Detection**: Automatically detect intensity outliers using percentile or Median Absolute Deviation (MAD) metrics.
+    .. image:: pysimplemask/figure3.png
+       :align: center
+       :width: 100%
 
-6. **Parametrization**: Use default or custom-generated maps to guide masking:
+    The figure above illustrates the before and after of outlier detection using MAD. A threshold of 10 is set to mark the pixels whose value is more than 10 MADs away from the median value in the circularly averaged intensity profile. Note, this function is only useful for isotropic scattering data.
+
+6. **Parametrization**: Use default or custom-generated maps to guide masking which allows flexible and precise control over the masking creation:
 
    - **phi**: Polar angle (°)
    - **TTH**: 2θ scattering angle (°)
    - **q**, **q_x**, **q_y**: Momentum transfer (1/Å)
    - **x**, **y**: Detector pixel coordinates
+
+    .. image:: pysimplemask/figure4.png
+      :align: center
+      :width: 100%
+    
+    The figure above shows a custom mask created using both **phi** and **q** maps. The default mask being all ones is combined with 4 **phi** constraints that define a 60-degree sector. Than a **q** map constraint is appleid to limit the mask to 0.01 to 0.03 Å^-1 range. Note the use of logic operator is needed for combining multiple constraints.
+
 
 Each masking method supports an **Evaluate → Apply** workflow. You can preview masks before applying, and undo/redo/reset as needed.
 
@@ -150,5 +179,23 @@ For scattering patterns with symmetry, QMap generation can incorporate symmetry 
     - ``Symmetry = 2``
     - ``Offset = 45°`` to avoid discontinuities near 0°/360°
 
+    .. image:: pysimplemask/figure5.png
+       :alt: example 1
+       :align: center
+       :width: 100%
+
+    The figure above illustrates how symmetry constraints can be applied to create a QMap the groups the horizontal/vertical regions as one bin. This is particularly useful when one wants to analyze both regions as a whole to increase the signal-to-noise ratio or to simplify the analysis process. Note, a 45-degree offset is necessary to avoid discontinuities near 0°/360°.
+
 This ensures that symmetric pixel pairs are grouped into the same bin.
 
+
+Authors
+=======
+- **Name**: Miaoqi Chu 
+- **Email**: mqichu@anl.gov
+
+- **Name**: Qingteng Zhang
+- **Email**: qzhang234@anl.gov
+
+
+Updated on: 2025-06-16
