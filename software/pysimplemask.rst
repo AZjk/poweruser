@@ -39,6 +39,15 @@ To launch ``pysimplemask``, activate the environment where it was installed and 
     pysimplemask
     pysimplemask --path PATH_TO_YOUR_DATA_FOLDER
 
+If you're using linux machines at the APS beamlines, you can run 
+
+.. code-block:: bash
+
+    launch_simplemask
+    launch_simplemask --path PATH_TO_YOUR_DATA_FOLDER
+
+`lauch_simplemask` is a script that sets up the environment automatically.
+
 
 Overview of the GUI Application
 ===============================
