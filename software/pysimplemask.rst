@@ -125,8 +125,9 @@ Available masking methods include:
 
     The figure above illustrates the before and after of outlier detection using MAD. A threshold of 10 is set to mark the pixels whose value is more than 10 MADs away from the median value in the circularly averaged intensity profile. Note, this function is only useful for isotropic scattering data.
 
-6. **Parametrization**: Use default or custom-generated maps to guide masking which allows flexible and precise control over the masking creation:
+.. _internal_maps:
 
+6. **Parametrization**: Use default or custom-generated maps to guide masking which allows flexible and precise control over the masking creation:
    - **phi**: Polar angle (°)
    - **TTH**: 2θ scattering angle (°)
    - **q**, **q_x**, **q_y**: Momentum transfer (1/Å)
@@ -172,6 +173,23 @@ Fields saved in a QMap:
 Advanced Features
 =================
 
+Visualize all internal maps
+---------------------------
+In the "Scattering, Mask and Partitions" box, one can choose the different target to view. Currently, the supported targets include:
+- **Scattering**: The original scattering pattern.
+- **Scattering X mask**: The scattering pattern after applying the mask.
+- **Mask**: The mask applied to the scattering pattern
+- **qmaps**: defined in `previous section <#internal_maps>`
+
+    .. image:: pysimplemask/figure6.png
+        :align: center
+        :width: 100%
+
+    Example of visualizing different targets in the GUI.
+
+
+Create QMap with symmetries
+---------------------------
 For scattering patterns with symmetry, QMap generation can incorporate symmetry constraints.
 
 **Example**: For a sample with horizontal/vertical symmetry, set:
