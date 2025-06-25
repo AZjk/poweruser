@@ -10,6 +10,7 @@ import traceback
 import argparse
 import json
 import glob
+import re # Added for advanced filename parsing
 
 
 def _check_and_fetch_single_file(
@@ -51,13 +52,12 @@ def fast_average_g2(
     sum_result = {}
     total_valid_files = 0
     first_valid_file_path = None
+    total_files = len(flist)
 
     if not flist:
         print("No files provided for averaging.")
         return
 
-    # MODIFICATION: Store total number of files for progress counter
-    total_files = len(flist)
     print(f"Found {total_files} HDF5 files to process.")
 
     if num_workers is None:
@@ -66,8 +66,6 @@ def fast_average_g2(
     print(f"{num_workers} workers will be used for {len(flist)} files.")
 
     main_start_time = time.time()
-
-    # MODIFICATION: Initialize a counter for processed files
     processed_count = 0
 
     with ProcessPoolExecutor(max_workers=num_workers) as executor:
@@ -85,15 +83,12 @@ def fast_average_g2(
         }
 
         for future in as_completed(future_to_file):
-            # MODIFICATION: Increment counter and create progress prefix
             processed_count += 1
             progress_prefix = f"({processed_count}/{total_files})"
-
             fname = future_to_file[future]
             try:
                 flag, g2_baseline, single_result, count, original_fname = future.result()
-
-                # MODIFICATION: Add progress counter to print statements
+                
                 if not flag:
                     if g2_baseline is not None:
                         print(f"{progress_prefix} Skipping {os.path.basename(original_fname)}: G2 baseline ({g2_baseline:.4f}) out of range [{avg_blmin:.2f}, {avg_blmax:.2f}]")
@@ -101,7 +96,7 @@ def fast_average_g2(
                         print(f"{progress_prefix} Skipping {os.path.basename(original_fname)} due to a read error.")
                 else:
                     print(f"{progress_prefix} Including {os.path.basename(original_fname)} in average.")
-
+                    
                     for key, value in single_result.items():
                         if key not in sum_result:
                             sum_result[key] = np.zeros_like(value)
@@ -145,7 +140,7 @@ def main():
 
     with open(args.config_file, 'r') as f:
         config = json.load(f)
-
+    
     print("Configuration loaded:")
     print(json.dumps(config, indent=2))
 
@@ -159,6 +154,9 @@ def main():
         print("Please ensure 'file_path', 'file_header', and 'file_range' are in your config file.")
         return
 
+    # --- UNIFIED LOGIC: Check the value of 'file_range' ---
+    
+    # Mode 1: Search for all files if file_range is "all"
     if isinstance(file_range, str) and file_range.lower() == 'all':
         search_pattern = os.path.join(base_path, f"{header}*.hdf")
         print(f"\nMode: File Search. 'file_range' is 'all'.")
@@ -166,21 +164,37 @@ def main():
         flist = glob.glob(search_pattern)
         flist.sort()
 
+    # MODIFIED Mode 2: Search with prefix, then filter by numerical range
     elif isinstance(file_range, list) and len(file_range) == 2:
         try:
             start, end = file_range
-            print(f"\nMode: Range Generation. Generating files for header '{header}' in range {start}-{end}.")
-            for i in range(start, end + 1):
-                filename = f"{header}_r{i:05d}_results.hdf"
-                full_path = os.path.join(base_path, filename)
-                flist.append(full_path)
+            print(f"\nMode: Search and Filter by Range. Header='{header}', Range={start}-{end}.")
+            
+            # Step 1: Search for all files that start with the header prefix
+            search_pattern = os.path.join(base_path, f"{header}*.hdf")
+            all_matching_files = glob.glob(search_pattern)
+            
+            # Step 2: Filter the results by the run number in the filename
+            temp_flist = []
+            for f in all_matching_files:
+                # Use regex to find the number after '_r' in the filename
+                match = re.search(r'_r(\d+)', os.path.basename(f))
+                if match:
+                    file_num = int(match.group(1))
+                    if start <= file_num <= end:
+                        temp_flist.append(f)
+            flist = sorted(temp_flist)
+
         except (ValueError, TypeError):
              print("\nError: 'file_range' list must contain two integers (e.g., [400, 499]).")
              return
-
+    
+    # If file_range is invalid, exit with an error
     else:
         print("\nError: 'file_range' must be the string 'all' or a list of two integers (e.g., [400, 499]).")
         return
+
+    # --- End of unified logic ---
 
     output_filename = config.get("output_filename", "averaged_results.hdf")
     full_output_path = os.path.join(base_path, output_filename)
@@ -190,7 +204,7 @@ def main():
     avg_blmin = config.get("baseline_min", 0.95)
     avg_blmax = config.get("baseline_max", 1.35)
     num_workers = config.get("num_workers", 12)
-
+    
     if flist:
         fast_average_g2(
             flist,
