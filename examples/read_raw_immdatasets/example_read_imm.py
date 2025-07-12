@@ -449,6 +449,8 @@ def read_data(file_name: str, batch_size: int = 1024) -> float:
     # Read all batches with progress bar
     for n in trange(len(imm), desc="Reading batches"):
         x = imm[n]
+        # x is a 2d array with (number_of_batch, detector_height x detector_width)
+        # place your code here to process the data
         sum_scattering += np.sum(x, axis=0)
         
     etime = time.perf_counter()
