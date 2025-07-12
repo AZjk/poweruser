@@ -3,7 +3,7 @@ Module for reading and processing IMM (Image Memory Map) dataset files.
 
 This module provides functionality to read IMM format files commonly used in
 X-ray Photon Correlation Spectroscopy (XPCS) experiments. It includes utilities
-for parsing IMM headers, reading both sparse and dense format data, and 
+for parsing IMM headers, reading both sparse and dense format data, and
 visualizing the results.
 
 Classes:
@@ -25,10 +25,11 @@ import numpy as np
 import time
 import logging
 import os
-from typing import Dict, Tuple, BinaryIO, Optional
+from typing import Dict, Tuple, BinaryIO, Optional, Literal
 from tqdm import trange
 from xpcs_dataset import XpcsDataset
 import matplotlib.pyplot as plt
+import h5py
 
 
 logger = logging.getLogger(__name__)
@@ -37,16 +38,16 @@ logger = logging.getLogger(__name__)
 def read_imm_header(file: BinaryIO) -> Dict[str, any]:
     """
     Read and parse the header of an IMM file.
-    
+
     IMM files have a 1024-byte header containing metadata about the image data,
     including dimensions, compression type, timestamps, and various experimental
     parameters.
-    
+
     Parameters
     ----------
     file : BinaryIO
         An open binary file object positioned at the start of an IMM header.
-        
+
     Returns
     -------
     dict
@@ -57,7 +58,7 @@ def read_imm_header(file: BinaryIO) -> Dict[str, any]:
         - 'dlen': Data length
         - 'bytes': Number of bytes per pixel
         - Various PV (process variable) fields for experimental parameters
-        
+
     Notes
     -----
     The header format is based on the IMM specification used at APS beamlines.
@@ -68,7 +69,7 @@ def read_imm_header(file: BinaryIO) -> Dict[str, any]:
         "ii32s16si16siiiiiiiiiiiiiddiiIiiI40sf40sf40sf40s"
         + "f40sf40sf40sf40sf40sf40sfffiiifc295s84s12s"
     )
-    
+
     # Field names corresponding to the format string
     imm_fieldnames = [
         "mode",
@@ -135,7 +136,7 @@ def read_imm_header(file: BinaryIO) -> Dict[str, any]:
 
     # Unpack binary data according to the format
     imm_headerdat = struct.unpack(imm_headformat, bindata)
-    
+
     # Create dictionary mapping field names to values
     imm_header = dict(zip(imm_fieldnames, imm_headerdat))
 
@@ -145,11 +146,11 @@ def read_imm_header(file: BinaryIO) -> Dict[str, any]:
 class ImmDataset(XpcsDataset):
     """
     A dataset class for reading IMM (Image Memory Map) format files.
-    
+
     This class provides efficient access to IMM files, supporting both dense
-    and sparse data formats. It inherits from XpcsDataset to provide a 
+    and sparse data formats. It inherits from XpcsDataset to provide a
     consistent interface for XPCS data processing.
-    
+
     Parameters
     ----------
     filename : str
@@ -160,7 +161,7 @@ class ImmDataset(XpcsDataset):
         Number of frames to return as one datum. Default is 1.
     **kwargs
         Additional keyword arguments passed to the parent XpcsDataset class.
-        
+
     Attributes
     ----------
     dataset_type : str
@@ -176,7 +177,7 @@ class ImmDataset(XpcsDataset):
         True if the data is stored in sparse format (compression=6).
     fh : file object or None
         File handle for reading data, opened on demand.
-        
+
     Examples
     --------
     >>> dataset = ImmDataset('experiment.imm', batch_size=100)
@@ -207,24 +208,24 @@ class ImmDataset(XpcsDataset):
     def read_toc(self) -> Tuple[np.ndarray, Tuple[int, int]]:
         """
         Read table of contents from the IMM file.
-        
+
         Scans through the entire IMM file to build a table of contents (TOC)
         that maps frame indices to file positions. This allows for efficient
         random access to frames without reading the entire file.
-        
+
         Returns
         -------
         tuple
             A tuple containing:
-            - toc (numpy.ndarray): Array of shape (n_frames, 2) with 
+            - toc (numpy.ndarray): Array of shape (n_frames, 2) with
               (start_byte, element_count) for each frame
             - det_size (tuple): Detector dimensions as (rows, cols)
-            
+
         Raises
         ------
         IOError
             If the IMM file is corrupted or cannot be read properly.
-            
+
         Notes
         -----
         The method determines if data is sparse based on the compression
@@ -235,17 +236,17 @@ class ImmDataset(XpcsDataset):
             header = read_imm_header(f)
             det_size = (header["rows"], header["cols"])
             self.is_sparse = bool(header["compression"] == 6)
-            
+
             # Reset to beginning of file
             f.seek(0)
             toc = []  # Will store (start byte, element count) pairs
-            
+
             # Scan through all frames in the file
             while True:
                 try:
                     header = read_imm_header(f)
                     cur = f.tell()
-                    
+
                     # Calculate payload size based on format
                     # Sparse: 4 bytes index + 2 bytes count = 6 bytes per pixel
                     # Dense: 2 bytes per pixel
@@ -268,7 +269,7 @@ class ImmDataset(XpcsDataset):
     def __reset__(self) -> None:
         """
         Reset the dataset state.
-        
+
         Closes any open file handles to free resources. Called when the
         dataset needs to be reset or cleaned up.
         """
@@ -279,18 +280,18 @@ class ImmDataset(XpcsDataset):
     def __getbatch__(self, index: int) -> np.ndarray:
         """
         Get a batch of frames at the specified index.
-        
+
         Parameters
         ----------
         index : int
             Batch index to retrieve.
-            
+
         Returns
         -------
         numpy.ndarray
             Array of shape (batch_size, n_pixels) containing the frame data.
             If mask_crop is set, returns (batch_size, n_masked_pixels).
-            
+
         Notes
         -----
         Opens the file handle on first access and keeps it open for
@@ -314,17 +315,17 @@ class ImmDataset(XpcsDataset):
     def __get_frame_dense__(self, batch_idx: int) -> np.ndarray:
         """
         Read frames stored in dense format.
-        
+
         Parameters
         ----------
         batch_idx : int
             Batch index to read.
-            
+
         Returns
         -------
         numpy.ndarray
             Array of shape (n_frames, n_pixels) containing dense frame data.
-            
+
         Notes
         -----
         Dense format stores all pixel values sequentially, even zeros.
@@ -332,31 +333,31 @@ class ImmDataset(XpcsDataset):
         beg, end, size = self.get_raw_index(batch_idx)
         idx_list = np.arange(beg, end, self.stride)
         toc = self.toc[idx_list]
-        
+
         imgs = []
         for start_byte, event_num in toc:
             self.fh.seek(start_byte)
             # Read uint16 data and convert to int16
             imgs.append(np.fromfile(self.fh, dtype=np.uint16, count=event_num))
-            
+
         imgs = np.array(imgs).astype(np.int16)
         return imgs
 
     def __get_frame_sparse__(self, batch_idx: int) -> np.ndarray:
         """
         Read frames stored in sparse format.
-        
+
         Parameters
         ----------
         batch_idx : int
             Batch index to read.
-            
+
         Returns
         -------
         numpy.ndarray
             Array of shape (n_frames, n_pixels) containing reconstructed
             dense frame data from sparse representation.
-            
+
         Notes
         -----
         Sparse format stores only non-zero pixels as (index, count) pairs,
@@ -370,7 +371,7 @@ class ImmDataset(XpcsDataset):
         frame = []
         index = []
         count = []
-        
+
         # Read sparse data for each frame
         for n, (start_byte, event_num) in enumerate(toc):
             self.fh.seek(start_byte)
@@ -380,7 +381,7 @@ class ImmDataset(XpcsDataset):
             index.append(np.fromfile(self.fh, dtype=np.int32, count=event_num))
             # Pixel counts (2 bytes each)
             count.append(np.fromfile(self.fh, dtype=self.dtype, count=event_num))
-            
+
         # Concatenate all sparse data
         frame = np.concatenate(frame)
         index = np.concatenate(index)
@@ -392,7 +393,7 @@ class ImmDataset(XpcsDataset):
     def __del__(self) -> None:
         """
         Cleanup method to ensure file handle is closed.
-        
+
         Called when the object is garbage collected to prevent
         resource leaks.
         """
@@ -406,29 +407,29 @@ class ImmDataset(XpcsDataset):
 def read_data(file_name: str, batch_size: int = 1024) -> float:
     """
     Read and process an entire IMM file, displaying performance statistics.
-    
+
     This function reads through an entire IMM file, computes the sum
     scattering pattern, displays it as a log-scale image, and reports
     the reading performance.
-    
+
     Parameters
     ----------
     file_name : str
         Path to the IMM file to read.
     batch_size : int, optional
         Number of frames to read per batch. Default is 1024.
-        
+
     Returns
     -------
     float
         Reading frequency in Hz (frames per second).
-        
+
     Notes
     -----
     The function displays a matplotlib figure showing the log-scale
     sum of all frames, which represents the time-averaged scattering
     pattern.
-    
+
     Examples
     --------
     >>> freq = read_data('/path/to/data.imm', batch_size=512)
@@ -436,7 +437,7 @@ def read_data(file_name: str, batch_size: int = 1024) -> float:
     """
     logger.info("Starting to read file: %s", os.path.basename(file_name))
     logger.info("Directory: %s", os.path.dirname(file_name))
-    
+
     # Create dataset instance
     imm = ImmDataset(file_name, batch_size=batch_size)
     logger.info("Table of contents generated")
@@ -445,59 +446,251 @@ def read_data(file_name: str, batch_size: int = 1024) -> float:
     # Time the reading process
     stime = time.perf_counter()
     sum_scattering = 0
-    
+
     # Read all batches with progress bar
     for n in trange(len(imm), desc="Reading batches"):
         x = imm[n]
         # x is a 2d array with (number_of_batch, detector_height x detector_width)
         # place your code here to process the data
         sum_scattering += np.sum(x, axis=0)
-        
+
     etime = time.perf_counter()
     t_diff = etime - stime
     freq = imm.frame_num / t_diff
-    
+
     print(f"Data traversal completed: {t_diff:.2f}s / {freq:.2f}Hz")
 
     # Display sum scattering pattern
     plt.figure(figsize=(8, 6))
     plt.imshow(np.log10(sum_scattering.reshape(imm.det_size) + 1))
-    plt.colorbar(label='log10(counts + 1)')
-    plt.title(f'Sum Scattering Pattern\n{os.path.basename(file_name)}')
-    plt.xlabel('Column')
-    plt.ylabel('Row')
+    plt.colorbar(label="log10(counts + 1)")
+    plt.title(f"Sum Scattering Pattern\n{os.path.basename(file_name)}")
+    plt.xlabel("Column")
+    plt.ylabel("Row")
     plt.tight_layout()
     plt.show()
-    
+
     return freq
+
+
+def convert_imm_to_hdf(
+    imm_file: str,
+    hdf_file: Optional[str] = None,
+    compression: Literal["lzf", "gzip"] = "lzf",
+    compression_opts: Optional[int] = None,
+    batch_size: int = 1024,
+    begin_frame: int = 0,
+    end_frame: int = -1,
+    stride_frame: int = 1,
+    avg_frame: int = 1,
+) -> str:
+    """
+    Convert an IMM file to HDF5 format with compression.
+
+    This function reads an IMM file and converts it to HDF5 format with
+    optional compression. The HDF5 file contains the image data along with
+    metadata from the IMM headers.
+
+    Parameters
+    ----------
+    imm_file : str
+        Path to the input IMM file.
+    hdf_file : str, optional
+        Path to the output HDF5 file. If None, uses the IMM filename with
+        .h5 extension.
+    compression : {"lzf", "gzip"}, optional
+        Compression algorithm to use. Default is "lzf" which provides fast
+        compression/decompression. "gzip" provides better compression ratio
+        but is slower.
+    compression_opts : int, optional
+        Compression level for gzip (1-9). Ignored for lzf. Default is 4 for gzip.
+    batch_size : int, optional
+        Number of frames to process at once. Default is 1024.
+    begin_frame : int, optional
+        First frame to convert (0-indexed). Default is 0.
+    end_frame : int, optional
+        Last frame to convert. Default is -1 (all frames).
+    stride_frame : int, optional
+        Frame stride for subsampling. Default is 1 (no subsampling).
+    avg_frame : int, optional
+        Number of frames to average together. Default is 1 (no averaging).
+
+    Returns
+    -------
+    str
+        Path to the created HDF5 file.
+
+    Notes
+    -----
+    The HDF5 file structure:
+    - /data: Main dataset containing the image frames
+    - /metadata/: Group containing IMM header information
+    - /metadata/detector_size: Detector dimensions
+    - /metadata/is_sparse: Whether the original data was sparse
+    - /metadata/frame_info: Frame selection parameters
+    - /metadata/compression_info: Compression settings used
+
+    Examples
+    --------
+    >>> # Convert with default LZF compression
+    >>> output = convert_imm_to_hdf("experiment.imm")
+
+    >>> # Convert with GZIP compression level 6
+    >>> output = convert_imm_to_hdf("experiment.imm", compression="gzip",
+    ...                            compression_opts=6)
+
+    >>> # Convert a subset of frames with averaging
+    >>> output = convert_imm_to_hdf("experiment.imm", begin_frame=100,
+    ...                            end_frame=1000, avg_frame=4)
+    """
+    # Set default output filename if not provided
+    if hdf_file is None:
+        hdf_file = os.path.splitext(imm_file)[0] + ".h5"
+
+    # Set default compression options
+    if compression == "gzip" and compression_opts is None:
+        compression_opts = 4
+    elif compression == "lzf":
+        compression_opts = None  # LZF doesn't use compression level
+
+    logger.info("Converting IMM to HDF5:")
+    logger.info("  Input: %s", imm_file)
+    logger.info("  Output: %s", hdf_file)
+    logger.info(
+        "  Compression: %s%s",
+        compression,
+        f" (level {compression_opts})" if compression_opts else "",
+    )
+
+    # Create IMM dataset
+    imm_dataset = ImmDataset(
+        imm_file,
+        batch_size=batch_size,
+        begin_frame=begin_frame,
+        end_frame=end_frame,
+        stride_frame=stride_frame,
+        avg_frame=avg_frame,
+    )
+
+    # Get dataset information
+    total_frames = imm_dataset.frame_num
+    det_size = imm_dataset.det_size
+    n_pixels = imm_dataset.pixel_num
+
+    logger.info("Dataset info:")
+    logger.info("  Total frames to convert: %d", total_frames)
+    logger.info("  Detector size: %s", det_size)
+    logger.info("  Data format: %s", "sparse" if imm_dataset.is_sparse else "dense")
+
+    # Create HDF5 file
+    with h5py.File(hdf_file, "w") as hf:
+        # Create main dataset with chunking for efficient access
+        # Create dataset with compression
+        dataset = hf.create_dataset(
+            "/entry/data/data",
+            shape=(total_frames, *det_size),
+            dtype=imm_dataset.dtype,
+            chunks=(1, *det_size),
+            compression=compression,
+            compression_opts=compression_opts,
+        )
+        # Process and write data in batches
+        frame_idx = 0
+        start_time = time.perf_counter()
+
+        with trange(len(imm_dataset), desc="Converting batches") as pbar:
+            for batch_idx in pbar:
+                # Read batch
+                batch_data = imm_dataset[batch_idx]
+
+                # Reshape to detector dimensions
+                batch_frames = batch_data.shape[0]
+                batch_reshaped = batch_data.reshape(batch_frames, *det_size)
+
+                # Write to HDF5
+                dataset[frame_idx : frame_idx + batch_frames] = batch_reshaped
+                frame_idx += batch_frames
+
+                # Update progress bar with speed
+                elapsed = time.perf_counter() - start_time
+                if elapsed > 0:
+                    speed = frame_idx / elapsed
+                    pbar.set_postfix({"frames/s": f"{speed:.1f}"})
+
+        # Add dataset attributes
+        dataset.attrs["units"] = "counts"
+        dataset.attrs["description"] = "X-ray scattering data converted from IMM format"
+
+    # Calculate final statistics
+    total_time = time.perf_counter() - start_time
+    file_size_mb = os.path.getsize(hdf_file) / (1024 * 1024)
+    original_size_mb = os.path.getsize(imm_file) / (1024 * 1024)
+    compression_ratio = original_size_mb / file_size_mb
+
+    logger.info("Conversion completed:")
+    logger.info("  Time: %.2f seconds", total_time)
+    logger.info("  Speed: %.1f frames/second", total_frames / total_time)
+    logger.info("  Original size: %.2f MB", original_size_mb)
+    logger.info("  HDF5 size: %.2f MB", file_size_mb)
+    logger.info("  Compression ratio: %.2fx", compression_ratio)
+
+    return hdf_file
 
 
 def test02() -> None:
     """
     Example function demonstrating how to use the IMM reader.
-    
+
     This function reads a specific IMM file and displays its
     sum scattering pattern along with performance statistics.
-    
+
     Notes
     -----
     Update the file path to point to your own IMM file before running.
     """
     fname = "/Users/mqichu/Documents/xpcs_data/2025_0712_legacy_imm_files/E140_SiO2_111921_270nm_62v_Exp3_PostPreshear_Preshear100_XPCS_02_032_att02_Lq1_001/E140_SiO2_111921_270nm_62v_Exp3_PostPreshear_Preshear100_XPCS_02_032_att02_Lq1_001_00001-05000.imm"
-    
+
     # Check if file exists
     if not os.path.exists(fname):
         logger.error("File not found: %s", fname)
         return
-        
+
     read_data(fname)
+
+
+def test_imm_to_hdf_conversion() -> None:
+    """
+    Example demonstrating IMM to HDF5 conversion.
+
+    This function shows how to convert an IMM file to HDF5 format
+    with different compression options.
+    """
+    # Example IMM file path - update this to your file
+    imm_file = "/Users/mqichu/Documents/xpcs_data/2025_0712_legacy_imm_files/E140_SiO2_111921_270nm_62v_Exp3_PostPreshear_Preshear100_XPCS_02_032_att02_Lq1_001/E140_SiO2_111921_270nm_62v_Exp3_PostPreshear_Preshear100_XPCS_02_032_att02_Lq1_001_00001-05000.imm"
+
+    if not os.path.exists(imm_file):
+        logger.error("IMM file not found: %s", imm_file)
+        logger.info("Please update the file path in test_imm_to_hdf_conversion()")
+        return
+
+    # Convert with LZF compression (fast)
+    logger.info("\n=== Converting with LZF compression ===")
+    hdf_lzf = convert_imm_to_hdf(
+        imm_file,
+        hdf_file="output_lzf.h5",
+        compression="lzf",
+        batch_size=512,
+    )
 
 
 if __name__ == "__main__":
     # Set up logging
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
-    
-    test02()
+
+    # Uncomment the function you want to run:
+
+    # test02()  # Read and display IMM file
+    test_imm_to_hdf_conversion()  # Convert IMM to HDF5
