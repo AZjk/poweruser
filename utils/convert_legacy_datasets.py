@@ -6,10 +6,11 @@ import os
 import traceback
 import concurrent.futures
 import numpy as np
+import sys
 
-META_TEMPLATE = Path(
-    "/home/beams10/8IDIUSER/Documents/llps-saxpcs/reanalysis_2025_0428/sample_metadata.hdf"
-)
+# Get the directory where this script is located
+SCRIPT_DIR = Path(__file__).resolve().parent
+META_TEMPLATE = SCRIPT_DIR / "sample_metadata.hdf"
 MAX_DEPTH = 5
 
 FIELD_MAPPING = {
@@ -133,13 +134,14 @@ def copy_dataset_safe(src_group, dst_group, src_path, dst_path, scale=None):
         pass
 
 
-def process_subfolder(subfolder_path, source_folder, dest_folder, ftype):
+def process_subfolder(subfolder_path, source_folder, dest_folder, ftype, copy_data=False):
     """
     Process a single subfolder to convert legacy datasets.
     Parameters:
     - subfolder_path: Path to the subfolder to process.
     - source_folder: Path to the source folder.
     - dest_folder: Path to the destination folder.
+    - copy_data: If True, copy data files instead of creating symbolic links.
     """
     try:
         raw_files = list(subfolder_path.glob(f"*{ftype}"))
@@ -158,13 +160,25 @@ def process_subfolder(subfolder_path, source_folder, dest_folder, ftype):
         linkname = save_folder / raw_file.name
         metaname = linkname.with_name(linkname.stem + "_metadata.hdf")
 
-        if linkname.exists():
-            if not (linkname.is_symlink() and linkname.resolve() == raw_file.resolve()):
-                linkname.unlink()
-                os.symlink(raw_file, linkname)
+        if copy_data:
+            # Copy the data file instead of creating a symbolic link
+            shutil.copy2(raw_file, linkname)
         else:
-            os.symlink(raw_file, linkname)
+            # Create symbolic link (original behavior)
+            if linkname.exists():
+                if not (linkname.is_symlink() and linkname.resolve() == raw_file.resolve()):
+                    linkname.unlink()
+                    os.symlink(raw_file, linkname)
+            else:
+                os.symlink(raw_file, linkname)
 
+        # Check if metadata template exists
+        if not META_TEMPLATE.exists():
+            raise FileNotFoundError(
+                f"Metadata template not found at {META_TEMPLATE}. "
+                f"Please ensure 'sample_metadata.hdf' exists in the same directory as this script."
+            )
+        
         shutil.copy2(META_TEMPLATE, metaname)
 
         with h5py.File(rawmeta_file, "r") as src_hdf, h5py.File(
@@ -204,19 +218,20 @@ def worker_process_subfolder(args):
     """
     Worker function to process a single subfolder.
     """
-    subfolder_path, source_folder, dest_folder, ftype = args
+    subfolder_path, source_folder, dest_folder, ftype, copy_data = args
     process_subfolder(
-        Path(subfolder_path), Path(source_folder), Path(dest_folder), ftype
+        Path(subfolder_path), Path(source_folder), Path(dest_folder), ftype, copy_data
     )
 
 
-def process_folder(source_folder, dest_folder, max_workers=None, ftype=".bin"):
+def process_folder(source_folder, dest_folder, max_workers=None, ftype=".bin", copy_data=False):
     """
     Process the folder structure and copy files.
     Parameters:
     - source_folder: The source folder path.
     - dest_folder: The destination folder path.
     - max_workers: The maximum number of worker processes to use. If None, use all available cores.
+    - copy_data: If True, copy data files instead of creating symbolic links.
     """
     source_folder = Path(source_folder).resolve()
     dest_folder = Path(dest_folder).resolve()
@@ -224,7 +239,7 @@ def process_folder(source_folder, dest_folder, max_workers=None, ftype=".bin"):
     dest_folder.mkdir(parents=True, exist_ok=True)
     all_subfolders = list(walk_subfolders(source_folder, max_depth=MAX_DEPTH))
     tasks = [
-        (subfolder, source_folder, dest_folder, ftype) for subfolder in all_subfolders
+        (subfolder, source_folder, dest_folder, ftype, copy_data) for subfolder in all_subfolders
     ]
 
     if max_workers is None or max_workers == 1:
@@ -245,37 +260,92 @@ def process_folder(source_folder, dest_folder, max_workers=None, ftype=".bin"):
 
 if __name__ == "__main__":
     import argparse
+    
+    # Verify metadata template exists at startup
+    if not META_TEMPLATE.exists():
+        print(f"Error: Metadata template not found at {META_TEMPLATE}")
+        print(f"Please ensure 'sample_metadata.hdf' exists in the same directory as this script.")
+        sys.exit(1)
 
     example_text = """\
-    Example:
-    python convert_legacy_datasets.py /path/to/source_folder /path/to/dest_folder --workers 1 --ftype .bin
+Examples:
+    # Basic usage with symbolic links (default)
+    python convert_legacy_datasets.py /path/to/source_folder /path/to/dest_folder
+    
+    # Copy data files instead of creating symbolic links
+    python convert_legacy_datasets.py /path/to/source_folder /path/to/dest_folder --copy-data
+    
+    # Process with multiple workers for faster processing
+    python convert_legacy_datasets.py /path/to/source_folder /path/to/dest_folder --workers 4
+    
+    # Process specific file types
+    python convert_legacy_datasets.py /path/to/source_folder /path/to/dest_folder --ftype .imm
+    
+    # Combined options: copy data with 8 workers for .h5 files
+    python convert_legacy_datasets.py /path/to/source_folder /path/to/dest_folder --copy-data --workers 8 --ftype .h5
+
+Notes:
+    - By default, the script creates symbolic links to original data files to save disk space
+    - Use --copy-data when you need independent copies or when symbolic links are not supported
+    - The script recursively searches up to 5 directory levels deep
+    - Each subfolder must contain exactly one data file (of specified type) and one .hdf metadata file
     """
 
     parser = argparse.ArgumentParser(
-        description="Convert legacy XPCS datasets to the new nexus format",
+        description="""Convert legacy XPCS datasets to the new NeXus format.
+
+This script processes legacy XPCS data by:
+1. Searching for subfolders containing paired data files (.bin/.imm/.h5) and metadata (.hdf) files
+2. Creating a new directory structure in the destination folder
+3. Either creating symbolic links (default) or copying data files to the new location
+4. Converting metadata from the legacy format to the new NeXus format using predefined field mappings
+5. Applying necessary unit conversions and scaling factors during the conversion
+
+The script preserves the original directory structure and handles errors gracefully by
+cleaning up incomplete conversions.""",
         epilog=example_text,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
-        "source_folder", type=str, help="Source folder containing data."
+        "source_folder", 
+        type=str, 
+        help="Path to the source folder containing legacy XPCS datasets. The script will recursively search this folder for data to convert."
     )
     parser.add_argument(
-        "dest_folder", type=str, help="Destination folder for processed data."
+        "dest_folder", 
+        type=str, 
+        help="Path to the destination folder where converted datasets will be stored. The original directory structure will be preserved."
     )
     parser.add_argument(
         "--workers",
         type=int,
         default=1,
-        help="Number of worker processes. Set to 1 for sequential processing.",
+        help="Number of parallel worker processes to use for conversion. Default is 1 (sequential processing). "
+             "Use higher values (e.g., 4, 8) to speed up processing of large datasets. "
+             "Set to the number of CPU cores for maximum performance.",
     )
     parser.add_argument(
         "--ftype",
         type=str,
         default=".bin",
-        help="File type to process. options: [.bin, .imm, .h5]",
+        choices=[".bin", ".imm", ".h5"],
+        help="File type/extension of the raw data files to process. Default is '.bin'. "
+             "The script will only process subfolders containing exactly one file of this type. "
+             "Supported formats: .bin (binary), .imm (IMM detector format), .h5 (HDF5).",
+    )
+    parser.add_argument(
+        "--copy-data",
+        action="store_true",
+        default=False,
+        help="Copy the raw data files to the destination instead of creating symbolic links. "
+             "Default is False (creates symbolic links to save disk space). "
+             "Use this option when: (1) you need independent copies of the data, "
+             "(2) the destination is on a different filesystem that doesn't support symbolic links, "
+             "or (3) you plan to move/delete the original data. "
+             "Warning: This will duplicate the data and require additional disk space.",
     )
 
     args = parser.parse_args()
     process_folder(
-        args.source_folder, args.dest_folder, max_workers=args.workers, ftype=args.ftype
+        args.source_folder, args.dest_folder, max_workers=args.workers, ftype=args.ftype, copy_data=args.copy_data
     )
