@@ -28,7 +28,6 @@ dependencies = [
     "scipy>=1.7.0",
     "h5py>=3.0.0",
     "tqdm>=4.60.0",
-    "click>=8.0.0",
 ]
 
 [project.optional-dependencies]
@@ -39,6 +38,14 @@ dev = [
     "flake8>=4.0",
     "mypy>=0.900",
     "isort>=5.0",
+]
+docs = [
+    "mkdocs>=1.5",
+    "mkdocs-material>=9.0",
+    "mkdocstrings[python]>=0.24",
+    "sphinx>=7.0",
+    "sphinx-rtd-theme>=2.0",
+    "myst-parser>=2.0",
 ]
 examples = [
     "matplotlib",

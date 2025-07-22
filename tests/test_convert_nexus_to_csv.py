@@ -9,8 +9,6 @@ from unittest.mock import patch, MagicMock, call
 import argparse
 
 # Import the function to test
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 from poweruser_xpcs.utils.convert_nexus_to_csv import hdf2csv
 
 

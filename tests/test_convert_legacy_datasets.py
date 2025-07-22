@@ -9,8 +9,6 @@ from unittest.mock import patch, MagicMock, call
 import concurrent.futures
 
 # Import the functions to test
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 from poweruser_xpcs.utils.convert_legacy_datasets import (
     copy_dataset_safe,
     process_subfolder,

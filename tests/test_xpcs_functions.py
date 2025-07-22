@@ -7,8 +7,6 @@ from unittest.mock import patch, MagicMock
 from scipy.sparse import csr_matrix
 
 # Import the functions to test
-import sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 from poweruser_xpcs.utils.xpcs_functions import (
     Read_Frames_8IDI_Rigaku,
     Muititau_Corr,
