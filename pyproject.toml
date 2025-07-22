@@ -38,6 +38,14 @@ dev = [
     "black>=22.0",
     "flake8>=4.0",
     "mypy>=0.900",
+    "isort>=5.0",
+]
+examples = [
+    "matplotlib",
+    "hdf5plugin",
+    "xpcs-viewer",
+    "jupyterlab",
+    "ipython",
 ]
 
 [project.scripts]

@@ -172,5 +172,22 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Project specific
+*.hdf
+*.h5
 *.bin
+*.imm
+*.csv
+!src/poweruser_xpcs/utils/sample_metadata.hdf

@@ -10,8 +10,10 @@
 To run the examples:
 
 ```bash
-pip install -r requirements.txt
+pip install -e ".[examples]"
 ```
+
+This will install the package along with all dependencies needed for running the examples and notebooks.
 
 ## Start JupyterLab 
 to start JupyterLab, run:
