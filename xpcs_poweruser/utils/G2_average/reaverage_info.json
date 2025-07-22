@@ -1,0 +1,11 @@
+{
+    "file_path": "/gdata/dm/8ID/8IDI/2025-2/olsen202506/analysis/Multitau/",
+    "file_header": "Ga0047",
+    "file_range": "all",
+    "output_filename": "AVG_Ga0047.hdf",
+    "baseline_min": 0.95,
+    "baseline_max": 1.35,
+    "baseline_qindex": 0,
+    "baseline_window": 3,
+    "num_workers": 12
+}

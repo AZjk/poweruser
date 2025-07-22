@@ -1,0 +1,12 @@
+include README.md
+include README_PACKAGE.md
+include LICENSE
+include requirements.txt
+include requirements_dev.txt
+recursive-include xpcs_poweruser *.py
+recursive-include xpcs_poweruser *.hdf
+recursive-include xpcs_poweruser *.json
+recursive-include xpcs_poweruser *.sh
+recursive-include xpcs_poweruser *.txt
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
