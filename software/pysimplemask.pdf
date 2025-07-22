@@ -189,7 +189,7 @@ endobj
 endobj
 25 0 obj
 <<
-/Author () /CreationDate (D:20250616232051-05'00') /Creator (\(unspecified\)) /Keywords () /ModDate (D:20250616232051-05'00') /Producer (ReportLab PDF Library - www.reportlab.com) 
+/Author () /CreationDate (D:20250616232756-05'00') /Creator (\(unspecified\)) /Keywords () /ModDate (D:20250616232756-05'00') /Producer (ReportLab PDF Library - www.reportlab.com) 
   /Subject (\(unspecified\)) /Title (Quick Guide on pysimplemask) /Trapped /False
 >>
 endobj
@@ -205,7 +205,7 @@ endobj
 endobj
 28 0 obj
 <<
-/Dest [ 7 0 R /XYZ 57.02362 412.4236 0 ] /Next 29 0 R /Parent 26 0 R /Prev 27 0 R /Title (Start Application)
+/Dest [ 7 0 R /XYZ 57.02362 412.4236 0 ] /Next 29 0 R /Parent 26 0 R /Prev 27 0 R /Title (Start the Application)
 >>
 endobj
 29 0 obj
@@ -250,7 +250,7 @@ endobj
 endobj
 37 0 obj
 <<
-/Length 5033
+/Length 5037
 >>
 stream
 1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
@@ -391,7 +391,7 @@ Q
 q
 1 0 0 1 57.02362 391.4236 cm
 q
-BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf .133333 .133333 .133333 rg (Start Application) Tj T* ET
+BT 1 0 0 1 0 3.5 Tm 21 TL /F2 17.5 Tf .133333 .133333 .133333 rg (Start the Application) Tj T* ET
 Q
 Q
 q
@@ -868,7 +868,7 @@ endstream
 endobj
 39 0 obj
 <<
-/Length 5714
+/Length 5883
 >>
 stream
 1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
@@ -1061,12 +1061,12 @@ q
 1 0 0 1 57.02362 570.0236 cm
 Q
 q
-1 0 0 1 57.02362 546.0236 cm
+1 0 0 1 57.02362 534.0236 cm
 q
 0 0 0 rg
 BT /F1 10 Tf 12 TL ET
 q
-1 0 0 1 6 9 cm
+1 0 0 1 6 21 cm
 q
 0 0 0 rg
 BT 1 0 0 1 0 2 Tm /F3 10 Tf 12 TL 2 0 Td (1.) Tj T* -2 0 Td ET
@@ -1075,7 +1075,7 @@ Q
 q
 1 0 0 1 23 -3 cm
 q
-BT 1 0 0 1 0 14 Tm 5.796907 Tw 12 TL /F5 10 Tf 0 0 0 rg (Blemish Files) Tj /F1 10 Tf (: Load predefined blemish files from ) Tj /F3 10 Tf (~/Documents/areaDetectorBlemish/) Tj /F1 10 Tf  T* 0 Tw (\(available on APS Linux machines\). These are automatically detected by ) Tj /F3 10 Tf (pysimplemask) Tj /F1 10 Tf (.) Tj T* ET
+BT 1 0 0 1 0 26 Tm 5.796907 Tw 12 TL /F5 10 Tf 0 0 0 rg (Blemish Files) Tj /F1 10 Tf (: Load predefined blemish files from ) Tj /F3 10 Tf (~/Documents/areaDetectorBlemish/) Tj /F1 10 Tf  T* 0 Tw 1.431529 Tw (\(available on APS Linux machines\). These are automatically detected by ) Tj /F3 10 Tf (pysimplemask) Tj /F1 10 Tf (. You may) Tj T* 0 Tw (load the mask defined in your earlier QMap file by select the file and set the HDF path to ) Tj /F3 10 Tf (/qmap/mask) Tj /F1 10 Tf (.) Tj T* ET
 Q
 Q
 q
@@ -1083,10 +1083,10 @@ Q
 Q
 Q
 q
-1 0 0 1 57.02362 540.0236 cm
+1 0 0 1 57.02362 528.0236 cm
 Q
 q
-1 0 0 1 57.02362 218.2979 cm
+1 0 0 1 57.02362 206.2979 cm
 q
 0 0 0 rg
 BT /F1 10 Tf 12 TL ET
@@ -1138,10 +1138,10 @@ Q
 Q
 Q
 q
-1 0 0 1 57.02362 212.2979 cm
+1 0 0 1 57.02362 200.2979 cm
 Q
 q
-1 0 0 1 57.02362 188.2979 cm
+1 0 0 1 57.02362 176.2979 cm
 q
 0 0 0 rg
 BT /F1 10 Tf 12 TL ET
@@ -1163,10 +1163,10 @@ Q
 Q
 Q
 q
-1 0 0 1 57.02362 182.2979 cm
+1 0 0 1 57.02362 170.2979 cm
 Q
 q
-1 0 0 1 57.02362 158.2979 cm
+1 0 0 1 57.02362 146.2979 cm
 q
 0 0 0 rg
 BT /F1 10 Tf 12 TL ET
@@ -1188,10 +1188,10 @@ Q
 Q
 Q
 q
-1 0 0 1 57.02362 152.2979 cm
+1 0 0 1 57.02362 140.2979 cm
 Q
 q
-1 0 0 1 57.02362 128.2979 cm
+1 0 0 1 57.02362 116.2979 cm
 q
 0 0 0 rg
 BT /F1 10 Tf 12 TL ET
@@ -2017,31 +2017,31 @@ xref
 0015384255 00000 n 
 0015384329 00000 n 
 0015384442 00000 n 
-0015384573 00000 n 
-0015384718 00000 n 
-0015384849 00000 n 
-0015384976 00000 n 
-0015385104 00000 n 
-0015385232 00000 n 
-0015385364 00000 n 
-0015385473 00000 n 
-0015385568 00000 n 
-0015390653 00000 n 
-0015397527 00000 n 
-0015403293 00000 n 
-0015406001 00000 n 
-0015412458 00000 n 
-0015415814 00000 n 
-0015415903 00000 n 
-0015415937 00000 n 
-0015415971 00000 n 
-0015416005 00000 n 
-0015416039 00000 n 
-0015416073 00000 n 
+0015384577 00000 n 
+0015384722 00000 n 
+0015384853 00000 n 
+0015384980 00000 n 
+0015385108 00000 n 
+0015385236 00000 n 
+0015385368 00000 n 
+0015385477 00000 n 
+0015385572 00000 n 
+0015390661 00000 n 
+0015397535 00000 n 
+0015403470 00000 n 
+0015406178 00000 n 
+0015412635 00000 n 
+0015415991 00000 n 
+0015416080 00000 n 
+0015416114 00000 n 
+0015416148 00000 n 
+0015416182 00000 n 
+0015416216 00000 n 
+0015416250 00000 n 
 trailer
 <<
 /ID 
-[<b50f4befd5ec9eaf540f4fbb4aeafc73><b50f4befd5ec9eaf540f4fbb4aeafc73>]
+[<812cf9fcbe7f83e5b030b67c7690ca73><812cf9fcbe7f83e5b030b67c7690ca73>]
 % ReportLab generated PDF document -- digest (http://www.reportlab.com)
 
 /Info 25 0 R
@@ -2049,5 +2049,5 @@ trailer
 /Size 50
 >>
 startxref
-15416107
+15416284
 %%EOF
