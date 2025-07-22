@@ -85,7 +85,7 @@ You can also use the functions directly in Python:
 
 ```python
 # Import the functions
-from xpcs_poweruser.utils import (
+from poweruser_xpcs.utils import (
     Read_Frames_8IDI_Rigaku,
     Muititau_Corr,
     Read_Qmap_8IDI,
@@ -107,9 +107,9 @@ G2, IP, IF, t_el = Muititau_Corr(img, delays_per_level)
 
 ### Command not found
 If `xpcs-poweruser` command is not found:
-1. Make sure the package is installed: `pip list | grep xpcs`
+1. Make sure the package is installed: `pip list | grep poweruser-xpcs`
 2. Check if pip's scripts directory is in your PATH
-3. Try reinstalling: `pip uninstall xpcs-poweruser && pip install -e .`
+3. Try reinstalling: `pip uninstall poweruser-xpcs && pip install -e .`
 
 ### Import errors
 If you get import errors:
@@ -136,22 +136,23 @@ pytest
 
 ### Format code:
 ```bash
-black xpcs_poweruser/
+black src/poweruser_xpcs/
 ```
 
 ## File Structure
 
 ```
 poweruser/
-├── xpcs_poweruser/          # Main package directory
-│   ├── __init__.py
-│   ├── cli.py              # CLI interface
-│   └── utils/              # Utility modules
-│       ├── xpcs_functions.py
-│       ├── convert_legacy_datasets.py
-│       ├── convert_nexus_to_csv.py
-│       ├── G2_average/
-│       └── fast_G2_average/
+├── src/
+│   └── poweruser_xpcs/      # Main package directory
+│       ├── __init__.py
+│       ├── cli.py          # CLI interface
+│       └── utils/          # Utility modules
+│           ├── xpcs_functions.py
+│           ├── convert_legacy_datasets.py
+│           ├── convert_nexus_to_csv.py
+│           ├── G2_average/
+│           └── fast_G2_average/
 ├── pyproject.toml          # Modern Python packaging config
 ├── setup.py               # Traditional packaging config
 ├── README_PACKAGE.md      # Detailed documentation

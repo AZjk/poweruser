@@ -8,7 +8,7 @@ this_directory = Path(__file__).parent
 long_description = (this_directory / "README_PACKAGE.md").read_text()
 
 setup(
-    name="xpcs-poweruser",
+    name="poweruser-xpcs",
     version="0.1.0",
     author="XPCS Team",
     author_email="xpcs@example.com",
@@ -16,7 +16,8 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/AZjk/poweruser",
-    packages=find_packages(),
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
@@ -47,11 +48,11 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "xpcs-poweruser=xpcs_poweruser.cli:main",
+            "xpcs-poweruser=poweruser_xpcs.cli:main",
         ],
     },
     package_data={
-        "xpcs_poweruser": [
+        "poweruser_xpcs": [
             "utils/sample_metadata.hdf",
             "utils/G2_average/*.json",
             "utils/fast_G2_average/*.json",

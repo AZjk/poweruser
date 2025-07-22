@@ -94,17 +94,18 @@ xpcs-poweruser run-script path/to/script.py arg1 arg2 arg3
 ## Package Structure
 
 ```
-xpcs_poweruser/
-├── __init__.py
-├── cli.py                    # Main CLI interface
-└── utils/
+src/
+└── poweruser_xpcs/
     ├── __init__.py
-    ├── xpcs_functions.py     # Core XPCS analysis functions
-    ├── convert_legacy_datasets.py
-    ├── convert_nexus_to_csv.py
-    ├── sample_metadata.hdf   # Template metadata file
-    ├── G2_average/          # Standard G2 averaging tools
-    └── fast_G2_average/     # Optimized G2 averaging tools
+    ├── cli.py                    # Main CLI interface
+    └── utils/
+        ├── __init__.py
+        ├── xpcs_functions.py     # Core XPCS analysis functions
+        ├── convert_legacy_datasets.py
+        ├── convert_nexus_to_csv.py
+        ├── sample_metadata.hdf   # Template metadata file
+        ├── G2_average/          # Standard G2 averaging tools
+        └── fast_G2_average/     # Optimized G2 averaging tools
 ```
 
 ## Python API
@@ -112,7 +113,7 @@ xpcs_poweruser/
 You can also import and use the functions directly in Python:
 
 ```python
-from xpcs_poweruser.utils import (
+from poweruser_xpcs.utils import (
     Read_Frames_8IDI_Rigaku,
     Muititau_Corr,
     Read_Qmap_8IDI,
@@ -148,13 +149,13 @@ pytest
 ### Code Formatting
 
 ```bash
-black xpcs_poweruser/
+black src/poweruser_xpcs/
 ```
 
 ### Type Checking
 
 ```bash
-mypy xpcs_poweruser/
+mypy src/poweruser_xpcs/
 ```
 
 ## License

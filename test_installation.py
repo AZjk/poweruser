@@ -7,9 +7,9 @@ import subprocess
 def test_package_import():
     """Test if the package can be imported."""
     try:
-        import xpcs_poweruser
+        import poweruser_xpcs
         print("✓ Package import successful")
-        print(f"  Version: {xpcs_poweruser.__version__}")
+        print(f"  Version: {poweruser_xpcs.__version__}")
         return True
     except ImportError as e:
         print(f"✗ Package import failed: {e}")
@@ -34,7 +34,7 @@ def test_cli_command():
 def test_utils_import():
     """Test if utils modules can be imported."""
     try:
-        from xpcs_poweruser.utils import (
+        from poweruser_xpcs.utils import (
             Read_Frames_8IDI_Rigaku,
             Muititau_Corr,
             Read_Qmap_8IDI,

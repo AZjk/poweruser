@@ -99,4 +99,4 @@ Thumbs.db
 *.bin
 *.imm
 *.csv
-!xpcs_poweruser/utils/sample_metadata.hdf
+!src/poweruser_xpcs/utils/sample_metadata.hdf

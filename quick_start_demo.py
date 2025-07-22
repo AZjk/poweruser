@@ -107,7 +107,7 @@ xpcs-poweruser run-script /path/to/script.py arg1 arg2
 2. Try the commands with your own data files
 
 3. Use Python API for programmatic access:
-   from xpcs_poweruser.utils import Read_Frames_8IDI_Rigaku, Muititau_Corr
+   from poweruser_xpcs.utils import Read_Frames_8IDI_Rigaku, Muititau_Corr
 
 4. Check the README_PACKAGE.md for detailed documentation
 """)
