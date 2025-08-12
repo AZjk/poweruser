@@ -70,7 +70,13 @@ def get_physical_core_count():
 
 
 def find_first_valid_file_and_dims(
-    flist, avg_window, avg_qindex, avg_blmin, avg_blmax, processing_dtype
+    flist,
+    avg_window,
+    avg_qindex,
+    avg_blmin,
+    avg_blmax,
+    processing_dtype,
+    nonzero_G2=False,
 ):
     """Reads files sequentially until it finds one that is valid to get data shapes."""
     logging.info(
@@ -92,6 +98,11 @@ def find_first_valid_file_and_dims(
                         shapes[skey] = dset.shape
                         # FIX: Create a numpy.dtype object instance, not just a class
                         dtypes[skey] = np.dtype(processing_dtype)
+
+                    # Add counter array for G2 valid pixel counting if nonzero_G2 is enabled
+                    if nonzero_G2:
+                        shapes["G2_count"] = shapes["G2"]
+                        dtypes["G2_count"] = np.dtype(np.uint32)
                     return fname, shapes, dtypes
         except Exception:
             continue
@@ -104,9 +115,15 @@ def worker_process_chunk(args_tuple):
     into a dedicated shared memory block, and updates a shared progress counter.
     """
     flist_chunk, worker_args, worker_id, shm_metas = args_tuple
-    avg_window, avg_qindex, avg_blmin, avg_blmax, h5_cache_size_mb, verbose = (
-        worker_args
-    )
+    (
+        avg_window,
+        avg_qindex,
+        avg_blmin,
+        avg_blmax,
+        h5_cache_size_mb,
+        verbose,
+        nonzero_G2,
+    ) = worker_args
 
     logger = logging.getLogger(f"Worker-{worker_id:02d}")
 
@@ -146,9 +163,26 @@ def worker_process_chunk(args_tuple):
                     if first_valid_file_in_chunk is None:
                         first_valid_file_in_chunk = fname
 
-                    for skey, shm_arr in shm_arrays.items():
-                        # NumPy correctly handles casting from file dtype to accumulator dtype
-                        shm_arr += fhdl[keymap[skey]][()]
+                    if nonzero_G2:
+                        # Load G2 data once and compute valid mask for efficiency
+                        G2_data = fhdl[keymap["G2"]][()]
+                        valid_mask = G2_data > 0
+
+                        for skey, shm_arr in shm_arrays.items():
+                            if skey == "G2":
+                                # Accumulate G2 values (invalid pixels are 0, so just add all)
+                                shm_arr += G2_data
+                            elif skey == "G2_count":
+                                # Count valid pixels for G2 averaging
+                                shm_arr[valid_mask] += 1.0
+                            else:
+                                # NumPy correctly handles casting from file dtype to accumulator dtype
+                                shm_arr += fhdl[keymap[skey]][()]
+                    else:
+                        # Original behavior: simple accumulation
+                        for skey, shm_arr in shm_arrays.items():
+                            # NumPy correctly handles casting from file dtype to accumulator dtype
+                            shm_arr += fhdl[keymap[skey]][()]
                     local_valid_files += 1
                 else:
                     skipped_files_in_chunk.append((file_basename, g2_baseline))
@@ -184,6 +218,7 @@ def fast_average_shared_memory(
     h5_cache_size_mb=512,
     verbose=False,
     precision="single",
+    nonzero_G2=False,
 ):
     if not flist:
         logging.warning("No files provided for averaging.")
@@ -197,7 +232,13 @@ def fast_average_shared_memory(
 
     # --- Pre-computation and Memory Allocation ---
     first_file, shapes, dtypes = find_first_valid_file_and_dims(
-        flist, avg_window, avg_qindex, avg_blmin, avg_blmax, processing_dtype
+        flist,
+        avg_window,
+        avg_qindex,
+        avg_blmin,
+        avg_blmax,
+        processing_dtype,
+        nonzero_G2,
     )
     if not first_file:
         logging.error("Could not find any valid files to process. Aborting.")
@@ -251,6 +292,7 @@ def fast_average_shared_memory(
         avg_blmax,
         h5_cache_size_mb,
         verbose,
+        nonzero_G2,
     )
     # The counter and lock are no longer passed in the tasks tuple
     tasks = [
@@ -335,10 +377,23 @@ def fast_average_shared_memory(
         # --- Finalization and Output ---
         if total_valid_files > 0 and first_valid_file_path:
             logging.info("Calculating final average and saving to disk...")
-            avg_result = {
-                key: value / total_valid_files
-                for key, value in final_sum_result.items()
-            }
+            avg_result = {}
+            for key, value in final_sum_result.items():
+                if key == "G2" and nonzero_G2:
+                    # Special handling for G2: divide by valid pixel counts
+                    valid_counts = final_sum_result["G2_count"]
+                    # Clip valid_counts to avoid division by zero
+                    valid_counts_clipped = np.clip(valid_counts, a_min=1.0, a_max=None)
+                    avg_result[key] = value / valid_counts_clipped
+                    logging.info(
+                        f"G2 averaging: using per-pixel valid counts (min: {valid_counts.min()}, max: {valid_counts.max()}, mean: {valid_counts.mean():.2f})"
+                    )
+                elif key == "G2_count":
+                    # Don't include the count array in the final result
+                    continue
+                else:
+                    # Standard averaging for other keys
+                    avg_result[key] = value / total_valid_files
 
             try:
                 output_dir = os.path.dirname(output_filename)
@@ -444,6 +499,11 @@ def main():
         choices=["single", "double"],
         help="Processing precision for accumulation (default: single).",
     )
+    parser.add_argument(
+        "--nonzero-G2",
+        action="store_true",
+        help="Enable per-pixel valid counting for G2 averaging (excludes zero/invalid pixels).",
+    )
     args = parser.parse_args()
 
     # --- Configure Root Logger ---
@@ -520,6 +580,9 @@ def main():
     logging.info(f"Baseline window:       {args.baseline_window}")
     logging.info(f"HDF5 cache per worker: {args.cache_mb} MB")
     logging.info(f"Processing Precision:  {args.precision}")
+    logging.info(
+        f"Nonzero G2 averaging:  {'Enabled' if args.nonzero_G2 else 'Disabled'}"
+    )
     logging.info(f"Verbose Logging:       {'Enabled' if args.verbose else 'Disabled'}")
     logging.info("---------------------\n")
 
@@ -535,6 +598,7 @@ def main():
             h5_cache_size_mb=args.cache_mb,
             verbose=args.verbose,
             precision=args.precision,
+            nonzero_G2=args.nonzero_G2,
         )
 
 
