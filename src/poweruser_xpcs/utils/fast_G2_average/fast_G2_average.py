@@ -19,6 +19,7 @@ import argparse
 import multiprocessing
 from multiprocessing import shared_memory
 import logging
+import glob
 
 # Import the key mapping and file writing utility from the user's custom module.
 from apply_qmap import keymap, apply_new_G2_to_file
@@ -389,7 +390,8 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "flistname", help="A text file with a list of input HDF files (one per line)."
+        "input_path",
+        help="A text file with a list of input HDF files (one per line), a folder containing *_result.hdf files, OR a path prefix (e.g., /path/to/folder/my_prefix to match my_prefix* files).",
     )
     parser.add_argument(
         "-o", "--output", default="averaged_results.hdf", help="Output file name."
@@ -460,12 +462,56 @@ def main():
             "`psutil` not found. Worker count will be based on a fallback. For optimal performance, please install it using: `pip install psutil`"
         )
 
-    try:
-        with open(args.flistname, "r") as f:
-            flist = [line.strip() for line in f if line.strip()]
-    except FileNotFoundError:
-        logging.exception(f"Error: The file list '{args.flistname}' was not found.")
-        return
+    # Determine if input_path is a file, directory, or prefix
+    if os.path.isdir(args.input_path):
+        # It's a directory - search for *_result.hdf files
+        search_pattern = os.path.join(args.input_path, "*_results.hdf")
+        flist = glob.glob(search_pattern)
+        if not flist:
+            logging.error(
+                f"No '*_results.hdf' files found in directory: {args.input_path}"
+            )
+            return
+        flist.sort()  # Sort for consistent processing order
+        logging.info(
+            f"Found {len(flist)} '*_results.hdf' files in directory: {args.input_path}"
+        )
+    elif os.path.isfile(args.input_path):
+        # It's a file - read file list from it
+        try:
+            with open(args.input_path, "r") as f:
+                flist = [line.strip() for line in f if line.strip()]
+        except FileNotFoundError:
+            logging.exception(
+                f"Error: The file list '{args.input_path}' was not found."
+            )
+            return
+    else:
+        # Check if it's a prefix pattern (e.g., /path/to/folder/my_prefix)
+        # Extract directory and prefix from the path
+        input_dir = os.path.dirname(args.input_path)
+        prefix = os.path.basename(args.input_path)
+
+        if os.path.isdir(input_dir) and prefix:
+            # Search for files matching the prefix pattern
+            search_pattern = os.path.join(input_dir, f"{prefix}*")
+            flist = glob.glob(search_pattern)
+            # Filter to only include files (not directories)
+            flist = [f for f in flist if os.path.isfile(f)]
+            if not flist:
+                logging.error(
+                    f"No files found matching prefix '{prefix}' in directory: {input_dir}"
+                )
+                return
+            flist.sort()  # Sort for consistent processing order
+            logging.info(
+                f"Found {len(flist)} files matching prefix '{prefix}' in directory: {input_dir}"
+            )
+        else:
+            logging.error(
+                f"Input path '{args.input_path}' is not a valid file, directory, or prefix pattern."
+            )
+            return
 
     logging.info("--- Configuration ---")
     logging.info(f"Output file:           {args.output}")
