@@ -14,11 +14,11 @@ DEFAULT_CONFIG = {
     "input_folder": "/gdata/dm/8ID/8IDI/2025-2/tempus202507d/data",
     # Output folder for launch_timepix_converter
     "converter_output_dir": "/home/beams10/8IDIUSER/Documents/Miaoqi/2025_0811_timepix_reanalysis/converted_datasets",
-    # Output directory for boost_corr_bin results
+    # Output directory for boost_corr_dev results
     "correlation_results_dir": "/home/beams10/8IDIUSER/Documents/Miaoqi/2025_0811_timepix_reanalysis/cluster_results",
     # Directory where generated .sh job scripts will be saved
     "job_script_dir": "/home/beams10/8IDIUSER/Documents/Miaoqi/2025_0811_timepix_reanalysis/jobs",
-    # Path to qmap file (h5/hdf) for boost_corr_bin
+    # Path to qmap file (h5/hdf) for boost_corr_dev
     "qmap": "/gdata/dm/8ID/8IDI/2025-2/tempus202507b/data/timepix_Sq90_Dq9_lin.hdf",
     # Run acquisition time in seconds for launch_timepix_converter (if <= 0, calculated as 1e6 * tbin)
     "tac": -1,
@@ -153,7 +153,7 @@ def find_folders_by_prefix(input_folder, prefix):
 
 def extract_subfolder_name(raw_folder):
     """
-    Extract subfolder name from raw_folder path by removing the _r{repeat_id:06d} suffix.
+    Extract subfolder name from raw_folder path by removing the _r{repeat_id:05d} suffix.
 
     Example:
         Input: "/gdata/dm/8ID/8IDI/2025-2/tempus202507d/data/Fc0444_PA3_a0001_f2000000_r01822"
@@ -162,7 +162,7 @@ def extract_subfolder_name(raw_folder):
     folder_name = os.path.basename(raw_folder)
     # Remove the _r{repeat_id:06d} pattern from the end
     # Pattern matches _r followed by exactly 6 digits at the end of the string
-    subfolder_name = re.sub(r"_r\d{6}$", "", folder_name)
+    subfolder_name = re.sub(r"_r\d{5}$", "", folder_name)
     return subfolder_name
 
 
@@ -223,7 +223,7 @@ mkdir -p "$CORRELATION_RESULTS_DIR"
 binfile=$(launch_timepix_converter -r "$RAW_FOLDER" -d "$CONVERTER_OUTPUT_DIR" -tac $TAC -tbin $TBIN)
 if [ -f "$binfile" ]; then
     echo "Converter finished. Output bin file: $binfile"
-    boost_corr_bin -r "$binfile" -q "$QMAP" -i 0 -w --save-G2 -o "$CORRELATION_RESULTS_DIR"
+    boost_corr_dev -r "$binfile" -q "$QMAP" -i 0 -w --save-G2 -o "$CORRELATION_RESULTS_DIR"
     echo "Job {job_index} completed successfully."
 else
     echo "Error: Converter did not produce expected output file: '$binfile'" >&2
@@ -293,7 +293,7 @@ Priority Order (highest to lowest):
         "--correlation-results-dir",
         type=str,
         default=CURRENT_CONFIG["correlation_results_dir"],
-        help="Output directory for boost_corr_bin result files (corresponds to --output). Directory will be created if it doesn't exist.",
+        help="Output directory for boost_corr_dev result files (corresponds to --output). Directory will be created if it doesn't exist.",
     )
     parser.add_argument(
         "--job-script-dir",
@@ -305,7 +305,7 @@ Priority Order (highest to lowest):
         "--qmap",
         type=str,
         default=CURRENT_CONFIG["qmap"],
-        help="Filename of the qmap file (h5/hdf) for boost_corr_bin correlation analysis (corresponds to --qmap).",
+        help="Filename of the qmap file (h5/hdf) for boost_corr_dev correlation analysis (corresponds to --qmap).",
     )
 
     # --- Processing Parameters ---
