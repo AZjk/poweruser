@@ -175,15 +175,15 @@ def create_job_script(
     tac,
     tbin,
     qmap,
-    run_timestamp,
     create_result_subfolder=True,
     verbose=True,
 ):
     """
     Safely generates an executable shell script for a single job.
     """
-    # Use Unix timestamp to prevent duplicates across runs
-    job_filename = f"job_{job_index:06d}_{run_timestamp}.sh"
+    # Generate unique Unix timestamp for each job to prevent duplicates
+    job_timestamp = int(time.time())
+    job_filename = f"job_{job_index:06d}_{job_timestamp}.sh"
     final_job_filepath = os.path.join(job_script_dir, job_filename)
     os.makedirs(job_script_dir, exist_ok=True)
 
@@ -375,9 +375,6 @@ Priority Order (highest to lowest):
     total_jobs = len(folders_to_process)
     start_time = time.time()
 
-    # Generate Unix timestamp for this run to ensure unique job names
-    run_timestamp = int(start_time)
-
     print(f"\nCreating {total_jobs} job scripts...")
 
     for index, raw_data_folder in enumerate(folders_to_process, start=1):
@@ -393,7 +390,6 @@ Priority Order (highest to lowest):
             tac=args.tac,
             tbin=args.tbin,
             qmap=args.qmap,
-            run_timestamp=run_timestamp,
             create_result_subfolder=args.create_result_subfolder,
             verbose=False,  # Suppress output to avoid interfering with progress bar
         )
