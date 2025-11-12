@@ -342,6 +342,34 @@ def main():
     )
     fast_g2_parser.set_defaults(func=fast_g2_average_command)
 
+    # Link files command
+    link_parser = subparsers.add_parser(
+        "link-files",
+        help="Create symbolic links for files from multiple source directories",
+        description="This command creates symbolic links from multiple source directories "
+        "to a single destination directory. Optionally supports repeat mode for continuous monitoring.",
+    )
+    link_parser.add_argument(
+        "--source",
+        "-s",
+        nargs="+",
+        required=True,
+        help="One or more source directories to link files from",
+    )
+    link_parser.add_argument(
+        "--destination",
+        "-d",
+        required=True,
+        help="Destination directory for symbolic links",
+    )
+    link_parser.add_argument(
+        "-r",
+        "--repeat-time",
+        type=int,
+        help="Optional: Repeat linking every N seconds (continuous mode)",
+    )
+    link_parser.set_defaults(func=link_files_command)
+
     # List utils command
     list_parser = subparsers.add_parser(
         "list-utils", help="List all available utility scripts and their descriptions"

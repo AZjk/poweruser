@@ -84,40 +84,33 @@ def create_symlinks(files: List[Path], destination: str) -> tuple:
     error_count = 0
 
     for file_path in files:
-        # Use the filename for the symlink name
-        link_name = file_path.name
+        # Use the parent folder name and filename for the symlink name
+        link_name = f"{file_path.parent.name}_{file_path.name}"
         link_path = dest_path / link_name
 
         # Check if symlink already exists
         if link_path.exists() or link_path.is_symlink():
             # Check if it's a valid symlink pointing to the same file
             if link_path.is_symlink():
-                try:
-                    if link_path.resolve() == file_path.resolve():
-                        logging.debug(
-                            f"Symlink already exists and is valid: {link_name}"
-                        )
-                        skipped_count += 1
-                        continue
-                    else:
-                        logging.warning(
-                            f"Symlink exists but points to different file: {link_name}"
-                        )
-                        # Handle naming conflict by appending a suffix
-                        base_name = file_path.stem
-                        extension = file_path.suffix
-                        counter = 1
-                        while True:
-                            new_link_name = f"{base_name}_{counter}{extension}"
-                            link_path = dest_path / new_link_name
-                            if not link_path.exists():
-                                link_name = new_link_name
-                                break
-                            counter += 1
-                except Exception as e:
-                    logging.error(f"Error checking symlink {link_name}: {e}")
-                    error_count += 1
+                if link_path.resolve() == file_path.resolve():
+                    logging.debug(f"Symlink already exists and is valid: {link_name}")
+                    skipped_count += 1
                     continue
+                else:
+                    logging.warning(
+                        f"Symlink exists but points to different file: {link_name}"
+                    )
+                    # Handle naming conflict by appending a suffix
+                    base_name = file_path.stem
+                    extension = file_path.suffix
+                    counter = 1
+                    while True:
+                        new_link_name = f"{base_name}_{counter}{extension}"
+                        link_path = dest_path / new_link_name
+                        if not link_path.exists():
+                            link_name = new_link_name
+                            break
+                        counter += 1
             else:
                 logging.warning(f"File already exists (not a symlink): {link_name}")
                 skipped_count += 1
