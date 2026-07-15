@@ -1,5 +1,12 @@
 # XPCS Power User Tools Documentation
 
+```{toctree}
+:hidden:
+:maxdepth: 1
+
+cli_user_guide
+```
+
 Welcome to the documentation for XPCS Power User Tools, a collection of utilities for XPCS (X-ray Photon Correlation Spectroscopy) data analysis.
 
 ## Overview

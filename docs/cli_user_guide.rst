@@ -54,6 +54,7 @@ The CLI provides the following commands:
 
 - ``convert-legacy`` - Convert legacy XPCS datasets to NeXus format
 - ``nexus-to-csv`` - Convert HDF5/NeXus files to CSV format
+- ``export-nexus`` - Extract intensity, g2, q-values, and time-delays into a compact NeXus file
 - ``g2-average`` - Run G2 averaging analysis
 - ``fast-g2-average`` - Run fast G2 averaging analysis
 - ``link-files`` - Create symbolic links from multiple sources
@@ -152,6 +153,46 @@ The command creates separate CSV files for:
 - G2 correlation functions
 - SAXS data
 - Metadata information
+
+export-nexus
+------------
+
+Extract intensity, g2, q-values, and time-delays from a processed HDF5/NeXus file into a new, smaller NeXus file, along with a metadata export (JSON/TXT/XLSX).
+
+**Syntax:**
+
+.. code-block:: bash
+
+   xpcs-poweruser export-nexus HDF_FILE [OPTIONS]
+
+**Required Arguments:**
+
+- ``HDF_FILE`` - Processed HDF5/NeXus file to extract data from
+
+**Options:**
+
+- ``-o, --output FILE`` - Path to the output NeXus file (default: ``<input_basename>_export.nxs``)
+
+**Examples:**
+
+Extract data with the default output filename:
+
+.. code-block:: bash
+
+   xpcs-poweruser export-nexus /data/experiment_001.hdf5
+
+Specify a custom output path:
+
+.. code-block:: bash
+
+   xpcs-poweruser export-nexus /data/experiment_001.hdf5 -o /data/results/experiment_001_export.nxs
+
+**Output:**
+
+The command creates:
+
+- A NeXus file containing ``intensity``, ``g2``, ``q_values``, and ``time_delays`` datasets
+- Metadata files (``<output_basename>_metadata.json``, ``.txt``, and ``.xlsx``) containing fields such as start time and detector frame time
 
 g2-average
 ----------
