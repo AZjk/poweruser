@@ -69,6 +69,22 @@ def nexus_to_csv_command(args):
     logger.info(f"Converted {converted_count} files successfully!")
 
 
+def export_nexus_command(args):
+    """Extract intensity, g2, q-values, and time-delays into a compact NeXus file."""
+    from .utils.export_nexus import export_nexus
+
+    output = args.output or f"{Path(args.hdf_file).stem}_export.nxs"
+
+    logger.info(f"Exporting {args.hdf_file} to {output}")
+
+    try:
+        export_nexus(args.hdf_file, output)
+        logger.info("Export completed successfully!")
+    except Exception as e:
+        logger.error(f"Error during export: {e}")
+        sys.exit(1)
+
+
 def run_script_command(args):
     """Run a Python script from the utils directory."""
     script_path = Path(args.script_path)
@@ -211,6 +227,7 @@ def list_utils_command(args):
     logger.info("Main Commands:")
     logger.info("  convert-legacy      - Convert legacy XPCS datasets to NeXus format")
     logger.info("  nexus-to-csv       - Convert HDF5/NeXus files to CSV format")
+    logger.info("  export-nexus       - Extract intensity, g2, q-values, and time-delays into a compact NeXus file")
     logger.info("  g2-average         - Run G2 averaging analysis")
     logger.info("  fast-g2-average    - Run fast G2 averaging analysis")
     logger.info(
@@ -297,6 +314,22 @@ def main():
         "-f", "--filter", default="", help="Optional substring filter for filenames"
     )
     nexus_parser.set_defaults(func=nexus_to_csv_command)
+
+    # Export nexus command
+    export_parser = subparsers.add_parser(
+        "export-nexus",
+        help="Extract intensity, g2, q-values, and time-delays into a compact NeXus file",
+        description="This command extracts key derived quantities (intensity, g2, q-values, "
+        "time-delays) and metadata from a processed HDF5/NeXus file into a new, smaller NeXus "
+        "file plus metadata exports (JSON/TXT/XLSX).",
+    )
+    export_parser.add_argument("hdf_file", help="HDF5/NeXus file to process")
+    export_parser.add_argument(
+        "-o",
+        "--output",
+        help="Path to the output NeXus file (default: <input_basename>_export.nxs)",
+    )
+    export_parser.set_defaults(func=export_nexus_command)
 
     # Run script command
     script_parser = subparsers.add_parser(
