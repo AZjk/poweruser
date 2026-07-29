@@ -1,5 +1,6 @@
-"""Merge a raw XPCS detector HDF5 file with its matched .spec metadata
-and the sample_metadata.hdf schema template into one output HDF5 file."""
+"""Merge a raw XPCS detector HDF5 file with its matched .spec metadata and the
+APS_28ID_XPCS_metadata_template.hdf schema template into a merged, metadata-only,
+or split (raw copy + separate metadata file) output."""
 import argparse
 import math
 import re
@@ -13,6 +14,7 @@ HC_KEV_ANGSTROM = 12.398419843320026
 
 
 def find_spec_file(raw_h5_path):
+    """Locate the .spec file matching `raw_h5_path` via its SPECFileName NDAttribute."""
     raw_h5_path = Path(raw_h5_path)
     with h5py.File(raw_h5_path, "r") as f:
         raw_path = f["entry/instrument/NDAttributes/SPECFileName"][0]
@@ -30,6 +32,7 @@ def find_spec_file(raw_h5_path):
 
 
 def get_scan_number(raw_h5_path):
+    """Return the most common SCANNUM value across frames, warning if it's not constant."""
     with h5py.File(raw_h5_path, "r") as f:
         scan_nums = f["entry/instrument/NDAttributes/SCANNUM"][()]
     counts = Counter(int(v) for v in scan_nums)
@@ -48,6 +51,7 @@ _DATASET_RE = re.compile(
 
 
 def parse_spec_ad_detector_block(spec_path, scan_number):
+    """Parse the `ad_detector` UXML dataset block for `scan_number` out of a .spec file."""
     with open(spec_path, "r") as f:
         lines = f.readlines()
 
@@ -94,15 +98,18 @@ def parse_spec_ad_detector_block(spec_path, scan_number):
 
 
 def get_h5_ndattribute_value(raw_h5_path, name):
+    """Read the first-frame value of NDAttribute `name` from `raw_h5_path`."""
     with h5py.File(raw_h5_path, "r") as f:
         return float(f[f"entry/instrument/NDAttributes/{name}"][0])
 
 
 def compute_detector_distance(delr_deg, d0=1.1, d1=0.75):
+    """Derive detector distance from the swinging-arm angle `delr_deg` (degrees)."""
     return d1 / math.cos(math.radians(delr_deg)) + d0 - d1
 
 
 def build_field_updates(spec_fields, energy, exposure_time, spec_basename):
+    """Map parsed spec fields plus energy/exposure_time to template dataset paths, converting units."""
     wavelength_angstrom = HC_KEV_ANGSTROM / energy
     beam_center_x = float(spec_fields["beam_center_x"])
     beam_center_y = float(spec_fields["beam_center_y"])
@@ -145,6 +152,7 @@ NDATTRIBUTE_FIELDS = {
 
 
 def populate_metadata_fields(out_f, raw_h5_path, spec_path, template_f):
+    """Copy the template's entry group into `out_f`, then overwrite it with values parsed from `raw_h5_path`/`spec_path`."""
     scan_number = get_scan_number(raw_h5_path)
     spec_fields = parse_spec_ad_detector_block(spec_path, scan_number)
     energy = get_h5_ndattribute_value(raw_h5_path, "Energy")
@@ -182,6 +190,7 @@ def populate_metadata_fields(out_f, raw_h5_path, spec_path, template_f):
 
 
 def build_output_h5(raw_h5_path, spec_path, template_h5_path, output_h5_path, overwrite=True):
+    """Write a single merged HDF5 file with raw detector data, original instrument metadata, and populated template fields."""
     raw_h5_path = Path(raw_h5_path)
     output_h5_path = Path(output_h5_path)
     if not overwrite and output_h5_path.exists():
@@ -208,6 +217,7 @@ def build_output_h5(raw_h5_path, spec_path, template_h5_path, output_h5_path, ov
 
 
 def build_metadata_h5(raw_h5_path, spec_path, template_h5_path, metadata_h5_path, overwrite=True):
+    """Write a metadata-only HDF5 file (no raw detector data) with populated template fields."""
     raw_h5_path = Path(raw_h5_path)
     metadata_h5_path = Path(metadata_h5_path)
     if not overwrite and metadata_h5_path.exists():
@@ -224,6 +234,7 @@ def build_metadata_h5(raw_h5_path, spec_path, template_h5_path, metadata_h5_path
 
 
 def build_split_output(raw_h5_path, spec_path, template_h5_path, output_folder, overwrite=True):
+    """Copy the raw HDF5 file and write a separate metadata HDF5 file into `<output_folder>/<raw-stem>/`."""
     raw_h5_path = Path(raw_h5_path)
     basename = raw_h5_path.stem
     scan_folder = Path(output_folder) / basename
@@ -291,6 +302,7 @@ def run(args):
 
 
 def main(argv=None):
+    """CLI entry point: parse arguments, run the conversion, and print each written path."""
     parser = argparse.ArgumentParser(
         description="Build a standardized XPCS metadata HDF5 file from a raw "
         "detector HDF5 file and its matched .spec file."
