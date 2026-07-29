@@ -191,3 +191,4 @@ Thumbs.db
 *.imm
 *.csv
 !src/poweruser_xpcs/utils/sample_metadata.hdf
+!src/poweruser_xpcs/aps28id_converter/APS_28ID_XPCS_metadata_template.hdf

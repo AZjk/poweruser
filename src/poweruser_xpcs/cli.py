@@ -85,6 +85,21 @@ def export_nexus_command(args):
         sys.exit(1)
 
 
+def aps28id_convert_command(args):
+    """Merge a raw APS 28-ID XPCS detector HDF5 file with its matched .spec metadata."""
+    from .aps28id_converter.build_xpcs_metadata_h5 import run as run_aps28id_convert
+
+    logger.info(f"Converting {args.raw_fname}")
+
+    try:
+        for path in run_aps28id_convert(args):
+            logger.info(f"Wrote {path}")
+        logger.info("Conversion completed successfully!")
+    except Exception as e:
+        logger.error(f"Error during conversion: {e}")
+        sys.exit(1)
+
+
 def run_script_command(args):
     """Run a Python script from the utils directory."""
     script_path = Path(args.script_path)
@@ -228,6 +243,7 @@ def list_utils_command(args):
     logger.info("  convert-legacy      - Convert legacy XPCS datasets to NeXus format")
     logger.info("  nexus-to-csv       - Convert HDF5/NeXus files to CSV format")
     logger.info("  export-nexus       - Extract intensity, g2, q-values, and time-delays into a compact NeXus file")
+    logger.info("  aps28id-convert    - Merge a raw APS 28-ID detector HDF5 file with its matched .spec metadata")
     logger.info("  g2-average         - Run G2 averaging analysis")
     logger.info("  fast-g2-average    - Run fast G2 averaging analysis")
     logger.info(
@@ -330,6 +346,19 @@ def main():
         help="Path to the output NeXus file (default: <input_basename>_export.nxs)",
     )
     export_parser.set_defaults(func=export_nexus_command)
+
+    # APS 28-ID convert command
+    from .aps28id_converter.build_xpcs_metadata_h5 import add_arguments as add_aps28id_arguments
+
+    aps28id_parser = subparsers.add_parser(
+        "aps28id-convert",
+        help="Merge a raw APS 28-ID XPCS detector HDF5 file with its matched .spec metadata",
+        description="This command merges a raw APS 28-ID detector HDF5 file with its matched "
+        ".spec metadata and the APS_28ID_XPCS_metadata_template.hdf schema template into a "
+        "standardized XPCS metadata HDF5 file.",
+    )
+    add_aps28id_arguments(aps28id_parser)
+    aps28id_parser.set_defaults(func=aps28id_convert_command)
 
     # Run script command
     script_parser = subparsers.add_parser(

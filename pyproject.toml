@@ -71,4 +71,9 @@ include = ["poweruser_xpcs*"]
 exclude = ["tests*"]
 
 [tool.setuptools.package-data]
-poweruser_xpcs = ["utils/sample_metadata.hdf", "utils/*/G2average_info.json", "utils/*/reaverage_info.json"]
+poweruser_xpcs = [
+    "utils/sample_metadata.hdf",
+    "utils/*/G2average_info.json",
+    "utils/*/reaverage_info.json",
+    "aps28id_converter/APS_28ID_XPCS_metadata_template.hdf",
+]
